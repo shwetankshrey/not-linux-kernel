@@ -2383,7 +2383,7 @@ COMPAT_SYSCALL_DEFINE1(sysinfo, struct compat_sysinfo __user *, info)
 }
 #endif /* CONFIG_COMPAT */
 
-SYSCALL_DEFINE2(rtnice, pid_t, pid, u64, nr_rt_g) {
+SYSCALL_DEFINE2(rtnice, pid_t, pid, int, nr_rt_g) {
     struct pid *pid_struct;
     struct task_struct *task;
     struct sched_entity *se;
@@ -2393,7 +2393,8 @@ SYSCALL_DEFINE2(rtnice, pid_t, pid, u64, nr_rt_g) {
         return -ESRCH;
     }
     task = pid_task(pid_struct, PIDTYPE_PID);
-    se = task->se;
-    se.nr_rt_guarantees = nr_rt_g;
+    se = &(task->se);
+    (*se).nr_rt_guarantees = nr_rt_g;
+    schedule();
     return 0;
 }

@@ -642,7 +642,7 @@ static u64 sched_slice(struct cfs_rq *cfs_rq, struct sched_entity *se)
      * guarantees are used and returns the time left for the
      * process to run
      */
-
+    /*
     sched_entity *curr = cfs_rq->curr;
     if (curr) {
         if (curr->nr_rt_guarantees > 0) {
@@ -650,7 +650,7 @@ static u64 sched_slice(struct cfs_rq *cfs_rq, struct sched_entity *se)
             return rtslice;
         }    
     }
-
+    */
 	for_each_sched_entity(se) {
 		struct load_weight *load;
 		struct load_weight lw;
@@ -731,10 +731,10 @@ static void update_curr(struct cfs_rq *cfs_rq)
      * remaining for the given process
      */
     if(curr->nr_rt_guarantees > 0) {
-        nr_rt_guarantees -= delta_exec / RT_TIMES;
+        curr->nr_rt_guarantees -= delta_exec / RT_TIMES;
     }
-
-	curr->vruntime += calc_delta_fair(delta_exec, curr);
+	
+    curr->vruntime += calc_delta_fair(delta_exec, curr);
 	update_min_vruntime(cfs_rq);
 
 	if (entity_is_task(curr)) {
@@ -3171,9 +3171,11 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
      * the above condition was not satisfied) then returns and does 
      * not reschedule
      */
+    /*
     if(curr->nr_rt_guarantees > 0) {
         return;
     }
+    */
 
 	/*
 	 * Ensure that a task that missed wakeup preemption by a
@@ -5033,29 +5035,7 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
 	struct task_struct *p;
 	int new_tasks;
  
-    /*
-     * goes through all the sched entities and finds the sched entity
-     * with the lowest rt_guarantee
-     */
-    struct sched_entity *cur = cfs_rq->curr;
-    if (cur->nr_rt_guarantees > 0) {
-        update_curr(cfs_rq);
-        return;
-    }
-    u64 min_rt_guarantees = 100;
-    struct sched_entity *xse;
-    struct sched_entity *min_xse;
-    for_each_sched_entity (xse) {
-            if (xse->nr_rt_guarantees > 0 && min_rt_guarantees > xse->nr_rt_guarantees) {
-                    min_rt_guarantees = xse->nr_rt_guarantees;
-                    min_xse = xse;
-            }
-    }
-    if(min_xse) {
-        return task_of(min_xse);
     
-    }
-
 again:
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	if (!cfs_rq->nr_running)
@@ -5097,7 +5077,16 @@ again:
 		se = pick_next_entity(cfs_rq, curr);
 		cfs_rq = group_cfs_rq(se);
 	} while (cfs_rq);
-
+    /*
+     * goes through all the sched entities and finds the first sched 
+     * entity with the rt_guarantee
+     */
+    struct sched_entity *xse;
+    for_each_sched_entity (xse) {
+        if (xse->nr_rt_guarantees > 0) {
+            se = xse;
+        }
+    }
 	p = task_of(se);
 
 	/*
@@ -5145,6 +5134,16 @@ simple:
 		cfs_rq = group_cfs_rq(se);
 	} while (cfs_rq);
 
+    /*
+     * goes through all the sched entities and finds the first sched 
+     * entity with the rt_guarantee
+     */
+    struct sched_entity *xse1;
+    for_each_sched_entity (xse1) {
+        if (xse1->nr_rt_guarantees > 0) {
+            se = xse1;
+        }
+    }
 	p = task_of(se);
 
 	if (hrtick_enabled(rq))

@@ -882,4 +882,6 @@ asmlinkage long sys_execveat(int dfd, const char __user *filename,
 			const char __user *const __user *argv,
 			const char __user *const __user *envp, int flags);
 
+asmlinkage long sys_rtnice(pid_t pid, int nr_rt_g);
+
 #endif

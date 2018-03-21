@@ -1,0 +1,35 @@
+Try 1 :
+With soft realtime (x = 100) scheduling 5303
+Without soft realtime scheduling 5383
+With soft realtime (x = 10) scheduling 5341
+With soft realtime (x = 50) scheduling 5272
+With soft realtime (x = 20) scheduling 1008
+Try 2 :
+With soft realtime (x = 100) scheduling 2169
+Without soft realtime scheduling 2139
+With soft realtime (x = 10) scheduling 2172
+With soft realtime (x = 50) scheduling 2012
+Try 3 :
+Without soft realtime scheduling 3496
+With soft realtime (x = 100) scheduling 3815
+With soft realtime (x = 10) scheduling 3694
+With soft realtime (x = 50) scheduling 2414
+With soft realtime (x = 20) scheduling 2091
+Try 4 :
+Without soft realtime scheduling 3414
+With soft realtime (x = 10) scheduling 3470
+With soft realtime (x = 50) scheduling 3241
+With soft realtime (x = 20) scheduling 1037
+With soft realtime (x = 100) scheduling 4507
+Try 5 :
+With soft realtime (x = 10) scheduling 5350
+Without soft realtime scheduling 5370
+With soft realtime (x = 50) scheduling 5197
+With soft realtime (x = 100) scheduling 6148
+With soft realtime (x = 20) scheduling 4906
+Try 6 :
+With soft realtime (x = 100) scheduling 2493
+With soft realtime (x = 10) scheduling 2476
+Without soft realtime scheduling 2443
+With soft realtime (x = 20) scheduling 1391
+With soft realtime (x = 50) scheduling 3530
