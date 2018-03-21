@@ -154,6 +154,7 @@ extern void get_avenrun(unsigned long *loads, unsigned long offset, int shift);
 #define FSHIFT		11		/* nr of bits of precision */
 #define FIXED_1		(1<<FSHIFT)	/* 1.0 as fixed-point */
 #define LOAD_FREQ	(5*HZ+1)	/* 5 sec intervals */
+#define RT_TIMES    (100*HZ/1000)   /* timeslice unit */
 #define EXP_1		1884		/* 1/exp(5sec/1min) as fixed-point */
 #define EXP_5		2014		/* 1/exp(5sec/5min) */
 #define EXP_15		2037		/* 1/exp(5sec/15min) */
@@ -1166,7 +1167,13 @@ struct sched_entity {
 
 	u64			exec_start;
 	u64			sum_exec_runtime;
-	u64			vruntime;
+
+    /* number of real time guarantees => x */
+    /* the task will run for atleast x time slices */
+    /* as defined in rt.h time slice => 100 * HZ / 1000 */
+    u64         nr_rt_guarantees; 	
+    
+    u64			vruntime;
 	u64			prev_sum_exec_runtime;
 
 	u64			nr_migrations;

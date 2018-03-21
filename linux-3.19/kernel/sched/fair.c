@@ -636,6 +636,20 @@ static u64 __sched_period(unsigned long nr_running)
 static u64 sched_slice(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	u64 slice = __sched_period(cfs_rq->nr_running + !se->on_rq);
+    
+    /*
+     * checks if current process is one in which the real time
+     * guarantees are used and returns the time left for the
+     * process to run
+     */
+
+    sched_entity *curr = cfs_rq->curr;
+    if (curr) {
+        if (curr->nr_rt_guarantees > 0) {
+            u64 rtslice = curr->nr_rt_guarantees * RT_TIMES;
+            return rtslice;
+        }    
+    }
 
 	for_each_sched_entity(se) {
 		struct load_weight *load;
@@ -711,6 +725,14 @@ static void update_curr(struct cfs_rq *cfs_rq)
 
 	curr->sum_exec_runtime += delta_exec;
 	schedstat_add(cfs_rq, exec_clock, delta_exec);
+
+    /*
+     * updates the number of real time guarantees
+     * remaining for the given process
+     */
+    if(curr->nr_rt_guarantees > 0) {
+        nr_rt_guarantees -= delta_exec / RT_TIMES;
+    }
 
 	curr->vruntime += calc_delta_fair(delta_exec, curr);
 	update_min_vruntime(cfs_rq);
@@ -3143,6 +3165,16 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 		return;
 	}
 
+    /*
+     * checks if the current process is one that requires real time
+     * guarantees and if they have not been satisfied (that is when 
+     * the above condition was not satisfied) then returns and does 
+     * not reschedule
+     */
+    if(curr->nr_rt_guarantees > 0) {
+        return;
+    }
+
 	/*
 	 * Ensure that a task that missed wakeup preemption by a
 	 * narrow margin doesn't have to wait for a full slice.
@@ -5000,6 +5032,29 @@ pick_next_task_fair(struct rq *rq, struct task_struct *prev)
 	struct sched_entity *se;
 	struct task_struct *p;
 	int new_tasks;
+ 
+    /*
+     * goes through all the sched entities and finds the sched entity
+     * with the lowest rt_guarantee
+     */
+    struct sched_entity *cur = cfs_rq->curr;
+    if (cur->nr_rt_guarantees > 0) {
+        update_curr(cfs_rq);
+        return;
+    }
+    u64 min_rt_guarantees = 100;
+    struct sched_entity *xse;
+    struct sched_entity *min_xse;
+    for_each_sched_entity (xse) {
+            if (xse->nr_rt_guarantees > 0 && min_rt_guarantees > xse->nr_rt_guarantees) {
+                    min_rt_guarantees = xse->nr_rt_guarantees;
+                    min_xse = xse;
+            }
+    }
+    if(min_xse) {
+        return task_of(min_xse);
+    
+    }
 
 again:
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -5030,7 +5085,7 @@ again:
 			update_curr(cfs_rq);
 		else
 			curr = NULL;
-
+ 
 		/*
 		 * This call to check_cfs_rq_runtime() will do the throttle and
 		 * dequeue its entity in the parent(s). Therefore the 'simple'
